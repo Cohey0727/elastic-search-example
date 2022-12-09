@@ -81,7 +81,7 @@ const searchDocument = async (indexName: string) => {
 };
 
 const main = async () => {
-  const indexName = "movies3";
+  const indexName = "movies";
   await createIndex(indexName);
   await addDocument(indexName);
 };

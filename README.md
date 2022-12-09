@@ -18,3 +18,20 @@ http://localhost:5601
 ### インデックスの確認
 
 http://localhost:5601/app/opensearch_index_management_dashboards#/indices
+
+### DevTool
+
+http://localhost:5601/app/dev_tools#/console
+
+サンプル
+
+```json
+GET /movies/_search
+{
+  "query": {
+    "match": {
+      "country": "Japan"
+    }
+  }
+}
+```
