@@ -1,9 +1,15 @@
+import fs from "fs";
 import { Client } from "@opensearch-project/opensearch";
+import path, { dirname } from "path";
+import { parse } from "csv-parse/sync";
 
+// ElasticSearch Configs
 const host = "localhost";
 const protocol = "https";
 const port = 9200;
 const auth = "admin:admin";
+
+const projectRoot = path.resolve("./");
 
 const client = new Client({
   node: `${protocol}://${auth}@${host}:${port}`,
@@ -31,28 +37,32 @@ const createIndex = async (indexName: string) => {
 
 const addDocument = async (indexName: string) => {
   console.log("Adding document:");
-  const id = "1";
-  const document = {
-    title: "The Outsider",
-    author: "Stephen King",
-    year: "2018",
-    genre: "Crime fiction",
-  };
+  const source = path.join(projectRoot, "movies.csv");
+  const buffer = fs.readFileSync(source);
+  const rows: any[] = parse(buffer);
 
-  const response = await client.index({
-    id,
-    index: indexName,
-    body: document,
-    refresh: true,
+  const responses = rows.map((row) => {
+    const document = {
+      title: row[2],
+      director: row[3],
+      country: row[5],
+      description: row[11],
+    };
+    return client.index({
+      id: row[0],
+      index: indexName,
+      body: document,
+      refresh: true,
+    });
   });
-
-  console.log(response.body);
+  await Promise.all(responses);
 };
 
+// Sample
 const searchDocument = async (indexName: string) => {
   console.log("Search results:");
 
-  var query = {
+  const query = {
     query: {
       match: {
         title: {
@@ -62,7 +72,7 @@ const searchDocument = async (indexName: string) => {
     },
   };
 
-  var response = await client.search({
+  const response = await client.search({
     index: indexName,
     body: query,
   });
@@ -71,10 +81,9 @@ const searchDocument = async (indexName: string) => {
 };
 
 const main = async () => {
-  const indexName = "books";
+  const indexName = "movies3";
   await createIndex(indexName);
   await addDocument(indexName);
-  await searchDocument(indexName);
 };
 
 main().catch(console.error);
